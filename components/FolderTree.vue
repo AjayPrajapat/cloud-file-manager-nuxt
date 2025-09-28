@@ -13,7 +13,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="tsx">
 import type { FolderItem } from '~/server/types'
 
 interface TreeFolder extends FolderItem {
@@ -25,8 +25,8 @@ withDefaults(defineProps<{ tree: TreeFolder[]; modelValue?: string }>(), { model
 defineEmits<{ (event: 'update:modelValue', value: string): void }>()
 </script>
 
-<script lang="ts">
-import { defineComponent } from 'vue'
+<script lang="tsx">
+import { defineComponent, ref } from 'vue'
 import type { FolderItem } from '~/server/types'
 
 interface TreeFolder extends FolderItem {

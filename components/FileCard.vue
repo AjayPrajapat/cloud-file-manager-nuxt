@@ -32,7 +32,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="tsx">
 import type { FileItem, TagItem } from '~/server/types'
 
 const props = defineProps<{
@@ -83,7 +83,7 @@ async function download() {
 }
 </script>
 
-<script lang="ts">
+<script lang="tsx">
 import { defineComponent } from 'vue'
 
 const baseIcon = (path: string) =>

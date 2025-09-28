@@ -43,7 +43,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="tsx">
 import type { FileItem } from '~/server/types'
 
 const props = defineProps<{ file: FileItem }>()
@@ -78,14 +78,62 @@ function formatDate(value: string) {
 }
 </script>
 
-<script lang="ts">
+<script lang="tsx">
 import { defineComponent, ref } from 'vue'
-import MarkdownIt from 'markdown-it'
 import type { FileItem } from '~/server/types'
 
 export default {}
 
-const md = new MarkdownIt({ html: true, linkify: true })
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function renderMarkdown(markdown: string) {
+  const escaped = escapeHtml(markdown)
+  const inlineEmphasis = (segment: string) =>
+    segment
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+
+  return escaped
+    .split(/\n{2,}/)
+    .map(block => {
+      if (/^######\s+/.test(block)) {
+        return `<h6>${inlineEmphasis(block.replace(/^######\s+/, ''))}</h6>`
+      }
+      if (/^#####\s+/.test(block)) {
+        return `<h5>${inlineEmphasis(block.replace(/^#####\s+/, ''))}</h5>`
+      }
+      if (/^####\s+/.test(block)) {
+        return `<h4>${inlineEmphasis(block.replace(/^####\s+/, ''))}</h4>`
+      }
+      if (/^###\s+/.test(block)) {
+        return `<h3>${inlineEmphasis(block.replace(/^###\s+/, ''))}</h3>`
+      }
+      if (/^##\s+/.test(block)) {
+        return `<h2>${inlineEmphasis(block.replace(/^##\s+/, ''))}</h2>`
+      }
+      if (/^#\s+/.test(block)) {
+        return `<h1>${inlineEmphasis(block.replace(/^#\s+/, ''))}</h1>`
+      }
+      if (/^(?:-|\*)\s+/m.test(block)) {
+        const items = block
+          .split(/\n/)
+          .map(line => line.replace(/^(?:-|\*)\s+/, ''))
+          .filter(Boolean)
+          .map(item => `<li>${inlineEmphasis(item)}</li>`) 
+        return `<ul>${items.join('')}</ul>`
+      }
+      return `<p>${inlineEmphasis(block.replace(/\n/g, '<br />'))}</p>`
+    })
+    .join('')
+}
 
 export const PdfViewer = defineComponent({
   name: 'PdfViewer',
@@ -127,7 +175,7 @@ export const MarkdownViewer = defineComponent({
       fetch(props.file.storage.url)
         .then(response => response.text())
         .then(text => {
-          content.value = md.render(text)
+          content.value = renderMarkdown(text)
         })
         .catch(() => {
           content.value = 'Failed to load markdown content.'
